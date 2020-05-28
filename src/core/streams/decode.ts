@@ -20,26 +20,26 @@ const decodeStream = (
   encoding: PDFName,
   params: undefined | typeof PDFNull | PDFDict,
 ) => {
-  if (encoding === PDFName.of('FlateDecode')) {
+  if (encoding === PDFName.FlateDecode) {
     return new FlateStream(stream);
   }
-  if (encoding === PDFName.of('LZWDecode')) {
+  if (encoding === PDFName.LZWDecode) {
     let earlyChange = 1;
     if (params instanceof PDFDict) {
-      const EarlyChange = params.lookup(PDFName.of('EarlyChange'));
+      const EarlyChange = params.lookup(PDFName.EarlyChange);
       if (EarlyChange instanceof PDFNumber) {
         earlyChange = EarlyChange.asNumber();
       }
     }
     return new LZWStream(stream, undefined, earlyChange as 0 | 1);
   }
-  if (encoding === PDFName.of('ASCII85Decode')) {
+  if (encoding === PDFName.ASCII85Decode) {
     return new Ascii85Stream(stream);
   }
-  if (encoding === PDFName.of('ASCIIHexDecode')) {
+  if (encoding === PDFName.ASCIIHexDecode) {
     return new AsciiHexStream(stream);
   }
-  if (encoding === PDFName.of('RunLengthDecode')) {
+  if (encoding === PDFName.RunLengthDecode) {
     return new RunLengthStream(stream);
   }
   throw new UnsupportedEncodingError(encoding.asString());
@@ -48,8 +48,8 @@ const decodeStream = (
 export const decodePDFRawStream = ({ dict, contents }: PDFRawStream) => {
   let stream: StreamType = new Stream(contents);
 
-  const Filter = dict.lookup(PDFName.of('Filter'));
-  const DecodeParms = dict.lookup(PDFName.of('DecodeParms'));
+  const Filter = dict.lookup(PDFName.Filter);
+  const DecodeParms = dict.lookup(PDFName.DecodeParms);
 
   if (Filter instanceof PDFName) {
     stream = decodeStream(

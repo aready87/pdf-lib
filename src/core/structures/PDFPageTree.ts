@@ -12,10 +12,10 @@ export type TreeNode = PDFPageTree | PDFPageLeaf;
 class PDFPageTree extends PDFDict {
   static withContext = (context: PDFContext, parent?: PDFRef) => {
     const dict = new Map();
-    dict.set(PDFName.of('Type'), PDFName.of('Pages'));
-    dict.set(PDFName.of('Kids'), context.obj([]));
-    dict.set(PDFName.of('Count'), context.obj(0));
-    if (parent) dict.set(PDFName.of('Parent'), parent);
+    dict.set(PDFName.Type, PDFName.Pages);
+    dict.set(PDFName.Kids, context.obj([]));
+    dict.set(PDFName.Count, context.obj(0));
+    if (parent) dict.set(PDFName.Parent, parent);
     return new PDFPageTree(dict, context);
   };
 
@@ -23,15 +23,15 @@ class PDFPageTree extends PDFDict {
     new PDFPageTree(map, context);
 
   Parent(): PDFPageTree | undefined {
-    return this.lookup(PDFName.of('Parent')) as PDFPageTree | undefined;
+    return this.lookup(PDFName.Parent) as PDFPageTree | undefined;
   }
 
   Kids(): PDFArray {
-    return this.lookup(PDFName.of('Kids'), PDFArray);
+    return this.lookup(PDFName.Kids, PDFArray);
   }
 
   Count(): PDFNumber {
-    return this.lookup(PDFName.of('Count'), PDFNumber);
+    return this.lookup(PDFName.Count, PDFNumber);
   }
 
   pushTreeNode(treeRef: PDFRef): void {
@@ -171,7 +171,7 @@ class PDFPageTree extends PDFDict {
 
     this.ascend((node) => {
       const newCount = node.Count().asNumber() + 1;
-      node.set(PDFName.of('Count'), PDFNumber.of(newCount));
+      node.set(PDFName.Count, PDFNumber.of(newCount));
     });
 
     Kids.insert(kidIdx, leafRef);
@@ -184,7 +184,7 @@ class PDFPageTree extends PDFDict {
     if (kid instanceof PDFPageLeaf) {
       this.ascend((node) => {
         const newCount = node.Count().asNumber() - 1;
-        node.set(PDFName.of('Count'), PDFNumber.of(newCount));
+        node.set(PDFName.Count, PDFNumber.of(newCount));
       });
     }
 

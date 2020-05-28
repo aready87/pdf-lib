@@ -62,7 +62,7 @@ class PDFCrossRefStream extends PDFFlateStream {
     this.maxByteWidthsCache = Cache.populatedBy(this.computeMaxEntryByteWidths);
     this.indexCache = Cache.populatedBy(this.computeIndex);
 
-    dict.set(PDFName.of('Type'), PDFName.of('XRef'));
+    dict.set(PDFName.Type, PDFName.XRef);
   }
 
   addDeletedEntry(ref: PDFRef, nextFreeObjectNumber: number) {
@@ -171,8 +171,8 @@ class PDFCrossRefStream extends PDFFlateStream {
     const index = this.indexCache.access();
 
     const { context } = this.dict;
-    this.dict.set(PDFName.of('W'), context.obj(byteWidths));
-    this.dict.set(PDFName.of('Index'), context.obj(index));
+    this.dict.set(PDFName.W, context.obj(byteWidths));
+    this.dict.set(PDFName.Index, context.obj(index));
   }
 
   // Returns an array of integer pairs for each subsection of the cross ref

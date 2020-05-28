@@ -25,8 +25,8 @@ class PDFObjectStreamParser extends PDFObjectParser {
 
     this.alreadyParsed = false;
     this.shouldWaitForTick = shouldWaitForTick || (() => false);
-    this.firstOffset = dict.lookup(PDFName.of('First'), PDFNumber).asNumber();
-    this.objectCount = dict.lookup(PDFName.of('N'), PDFNumber).asNumber();
+    this.firstOffset = dict.lookup(PDFName.First, PDFNumber).asNumber();
+    this.objectCount = dict.lookup(PDFName.N, PDFNumber).asNumber();
   }
 
   async parseIntoContext(): Promise<void> {

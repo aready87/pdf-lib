@@ -66,7 +66,7 @@ class PDFObjectCopier {
 
     // Remove the parent reference to prevent the whole donor document's page
     // tree from being copied when we only need a single page.
-    clonedPage.delete(PDFName.of('Parent'));
+    clonedPage.delete(PDFName.Parent);
 
     return this.copyPDFDict(clonedPage) as PDFPageLeaf;
   };

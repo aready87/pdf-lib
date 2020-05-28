@@ -20,6 +20,7 @@ import BaseParser from 'src/core/parser/BaseParser';
 import ByteStream from 'src/core/parser/ByteStream';
 import PDFContext from 'src/core/PDFContext';
 import PDFCatalog from 'src/core/structures/PDFCatalog';
+// import PDFOutlines from 'src/core/structures/PDFOutlines';
 import PDFPageLeaf from 'src/core/structures/PDFPageLeaf';
 import PDFPageTree from 'src/core/structures/PDFPageTree';
 import CharCodes from 'src/core/syntax/CharCodes';
@@ -190,13 +191,16 @@ class PDFObjectParser extends BaseParser {
     this.bytes.assertNext(CharCodes.GreaterThan);
     this.bytes.assertNext(CharCodes.GreaterThan);
 
-    const Type = dict.get(PDFName.of('Type'));
+    const Type = dict.get(PDFName.Type);
 
-    if (Type === PDFName.of('Catalog')) {
+    if (Type === PDFName.Catalog) {
       return PDFCatalog.fromMapWithContext(dict, this.context);
-    } else if (Type === PDFName.of('Pages')) {
+    //TODO: grab outlines from loaded PDFs
+    // } else if (Type === PDFName.Outlines) {
+    //   return PDFOutlines.fromMapWithContext(dict, this.context);
+    } else if (Type === PDFName.Pages) {
       return PDFPageTree.fromMapWithContext(dict, this.context);
-    } else if (Type === PDFName.of('Page')) {
+    } else if (Type === PDFName.Page) {
       return PDFPageLeaf.fromMapWithContext(dict, this.context);
     } else {
       return PDFDict.fromMapWithContext(dict, this.context);
@@ -223,7 +227,7 @@ class PDFObjectParser extends BaseParser {
     const start = this.bytes.offset();
     let end: number;
 
-    const Length = dict.get(PDFName.of('Length'));
+    const Length = dict.get(PDFName.Length);
     if (Length instanceof PDFNumber) {
       end = start + Length.asNumber();
       this.bytes.moveTo(end);

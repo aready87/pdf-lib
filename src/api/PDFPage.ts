@@ -129,7 +129,7 @@ export default class PDFPage {
   setRotation(angle: Rotation): void {
     const degreesAngle = toDegrees(angle);
     assertMultiple(degreesAngle, 'degreesAngle', 90);
-    this.node.set(PDFName.of('Rotate'), this.doc.context.obj(degreesAngle));
+    this.node.set(PDFName.Rotate, this.doc.context.obj(degreesAngle));
   }
 
   /**

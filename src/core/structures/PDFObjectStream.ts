@@ -31,9 +31,9 @@ class PDFObjectStream extends PDFFlateStream {
     this.offsets = this.computeObjectOffsets();
     this.offsetsString = this.computeOffsetsString();
 
-    this.dict.set(PDFName.of('Type'), PDFName.of('ObjStm'));
-    this.dict.set(PDFName.of('N'), PDFNumber.of(this.objects.length));
-    this.dict.set(PDFName.of('First'), PDFNumber.of(this.offsetsString.length));
+    this.dict.set(PDFName.Type, PDFName.ObjStm);
+    this.dict.set(PDFName.N, PDFNumber.of(this.objects.length));
+    this.dict.set(PDFName.First, PDFNumber.of(this.offsetsString.length));
   }
 
   getObjectsCount(): number {

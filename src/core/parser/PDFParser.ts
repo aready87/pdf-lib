@@ -75,7 +75,7 @@ class PDFParser extends PDFObjectParser {
   private maybeRecoverRoot(): void {
     const isValidCatalog = (obj?: PDFObject) =>
       obj instanceof PDFDict &&
-      obj.lookup(PDFName.of('Type')) === PDFName.of('Catalog');
+      obj.lookup(PDFName.Type) === PDFName.Catalog;
 
     const catalog = this.context.lookup(this.context.trailerInfo.Root);
 
@@ -153,7 +153,7 @@ class PDFParser extends PDFObjectParser {
 
     if (
       object instanceof PDFRawStream &&
-      object.dict.lookup(PDFName.of('Type')) === PDFName.of('ObjStm')
+      object.dict.lookup(PDFName.Type) === PDFName.ObjStm
     ) {
       await PDFObjectStreamParser.forStream(
         object,
@@ -161,7 +161,7 @@ class PDFParser extends PDFObjectParser {
       ).parseIntoContext();
     } else if (
       object instanceof PDFRawStream &&
-      object.dict.lookup(PDFName.of('Type')) === PDFName.of('XRef')
+      object.dict.lookup(PDFName.Type) === PDFName.XRef
     ) {
       PDFXRefStreamParser.forStream(object).parseIntoContext();
     } else {
@@ -270,10 +270,10 @@ class PDFParser extends PDFObjectParser {
 
     const { context } = this;
     context.trailerInfo = {
-      Root: dict.get(PDFName.of('Root')) || context.trailerInfo.Root,
-      Encrypt: dict.get(PDFName.of('Encrypt')) || context.trailerInfo.Encrypt,
-      Info: dict.get(PDFName.of('Info')) || context.trailerInfo.Info,
-      ID: dict.get(PDFName.of('ID')) || context.trailerInfo.ID,
+      Root: dict.get(PDFName.Root) || context.trailerInfo.Root,
+      Encrypt: dict.get(PDFName.Encrypt) || context.trailerInfo.Encrypt,
+      Info: dict.get(PDFName.Info) || context.trailerInfo.Info,
+      ID: dict.get(PDFName.ID) || context.trailerInfo.ID,
     };
   }
 

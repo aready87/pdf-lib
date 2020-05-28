@@ -37,9 +37,9 @@ class PDFXRefStreamParser {
     this.bytes = ByteStream.fromPDFRawStream(rawStream);
     this.context = this.dict.context;
 
-    const Size = this.dict.lookup(PDFName.of('Size'), PDFNumber);
+    const Size = this.dict.lookup(PDFName.Size, PDFNumber);
 
-    const Index = this.dict.lookup(PDFName.of('Index'));
+    const Index = this.dict.lookup(PDFName.Index);
     if (Index instanceof PDFArray) {
       this.subsections = [];
       for (let idx = 0, len = Index.size(); idx < len; idx += 2) {
@@ -51,7 +51,7 @@ class PDFXRefStreamParser {
       this.subsections = [{ firstObjectNumber: 0, length: Size.asNumber() }];
     }
 
-    const W = this.dict.lookup(PDFName.of('W'), PDFArray);
+    const W = this.dict.lookup(PDFName.W, PDFArray);
     this.byteWidths = [-1, -1, -1];
     for (let idx = 0, len = W.size(); idx < len; idx++) {
       this.byteWidths[idx] = W.lookup(idx, PDFNumber).asNumber();
@@ -65,10 +65,10 @@ class PDFXRefStreamParser {
     this.alreadyParsed = true;
 
     this.context.trailerInfo = {
-      Root: this.dict.get(PDFName.of('Root')),
-      Encrypt: this.dict.get(PDFName.of('Encrypt')),
-      Info: this.dict.get(PDFName.of('Info')),
-      ID: this.dict.get(PDFName.of('ID')),
+      Root: this.dict.get(PDFName.Root),
+      Encrypt: this.dict.get(PDFName.Encrypt),
+      Info: this.dict.get(PDFName.Info),
+      ID: this.dict.get(PDFName.ID),
     };
 
     const entries = this.parseEntries();

@@ -8,6 +8,7 @@ import {
 import PDFEmbeddedPage from 'src/api/PDFEmbeddedPage';
 import PDFFont from 'src/api/PDFFont';
 import PDFImage from 'src/api/PDFImage';
+import PDFOutline from 'src/api/PDFOutline';
 import PDFPage from 'src/api/PDFPage';
 import { PageSizes } from 'src/api/sizes';
 import { StandardFonts } from 'src/api/StandardFonts';
@@ -23,6 +24,8 @@ import {
   PDFHexString,
   PDFName,
   PDFObjectCopier,
+  PDFOutlines,
+  outlineOptions,
   PDFPageEmbedder,
   PDFPageLeaf,
   PDFPageTree,
@@ -76,6 +79,7 @@ export interface LoadOptions {
 
 export interface CreateOptions {
   updateMetadata?: boolean;
+  useOutlines?: boolean;
 }
 
 export interface EmbedFontOptions {
@@ -170,12 +174,14 @@ export default class PDFDocument {
    * @returns Resolves with the newly created document.
    */
   static async create(options: CreateOptions = {}) {
-    const { updateMetadata = true } = options;
+    const { updateMetadata = true, useOutlines } = options;
 
     const context = PDFContext.create();
     const pageTree = PDFPageTree.withContext(context);
     const pageTreeRef = context.register(pageTree);
-    const catalog = PDFCatalog.withContextAndPages(context, pageTreeRef);
+    const outlines = PDFOutlines.withContext(context, { expanded: true });
+    const outlinesRef = context.register(outlines);
+    const catalog = PDFCatalog.withContextAndPages(context, pageTreeRef, outlinesRef, useOutlines);
     context.trailerInfo.Root = context.register(catalog);
 
     return new PDFDocument(context, false, updateMetadata);
@@ -194,9 +200,12 @@ export default class PDFDocument {
   defaultWordBreaks: string[] = [' '];
 
   private fontkit?: Fontkit;
+  private readonly outlineCache: Cache<PDFOutline[]>;
+  private readonly outlineMap: Map<PDFOutlines, PDFOutline>;
   private pageCount: number | undefined;
   private readonly pageCache: Cache<PDFPage[]>;
   private readonly pageMap: Map<PDFPageLeaf, PDFPage>;
+  
   private readonly fonts: PDFFont[];
   private readonly images: PDFImage[];
   private readonly embeddedPages: PDFEmbeddedPage[];
@@ -212,6 +221,9 @@ export default class PDFDocument {
     this.context = context;
     this.catalog = context.lookup(context.trailerInfo.Root) as PDFCatalog;
     this.isEncrypted = !!context.lookup(context.trailerInfo.Encrypt);
+
+    this.outlineCache = Cache.populatedBy(this.computeOutlines);
+    this.outlineMap = new Map();
 
     this.pageCache = Cache.populatedBy(this.computePages);
     this.pageMap = new Map();
@@ -370,7 +382,7 @@ export default class PDFDocument {
    */
   setTitle(title: string): void {
     assertIs(title, 'title', ['string']);
-    const key = PDFName.of('Title');
+    const key = PDFName.Title;
     this.getInfoDict().set(key, PDFHexString.fromText(title));
   }
 
@@ -384,7 +396,7 @@ export default class PDFDocument {
    */
   setAuthor(author: string): void {
     assertIs(author, 'author', ['string']);
-    const key = PDFName.of('Author');
+    const key = PDFName.Author;
     this.getInfoDict().set(key, PDFHexString.fromText(author));
   }
 
@@ -398,7 +410,7 @@ export default class PDFDocument {
    */
   setSubject(subject: string): void {
     assertIs(subject, 'author', ['string']);
-    const key = PDFName.of('Subject');
+    const key = PDFName.Subject;
     this.getInfoDict().set(key, PDFHexString.fromText(subject));
   }
 
@@ -412,7 +424,7 @@ export default class PDFDocument {
    */
   setKeywords(keywords: string[]): void {
     assertIs(keywords, 'keywords', [Array]);
-    const key = PDFName.of('Keywords');
+    const key = PDFName.Keywords;
     this.getInfoDict().set(key, PDFHexString.fromText(keywords.join(' ')));
   }
 
@@ -426,7 +438,7 @@ export default class PDFDocument {
    */
   setCreator(creator: string): void {
     assertIs(creator, 'creator', ['string']);
-    const key = PDFName.of('Creator');
+    const key = PDFName.Creator;
     this.getInfoDict().set(key, PDFHexString.fromText(creator));
   }
 
@@ -440,7 +452,7 @@ export default class PDFDocument {
    */
   setProducer(producer: string): void {
     assertIs(producer, 'creator', ['string']);
-    const key = PDFName.of('Producer');
+    const key = PDFName.Producer;
     this.getInfoDict().set(key, PDFHexString.fromText(producer));
   }
 
@@ -456,7 +468,7 @@ export default class PDFDocument {
    */
   setLanguage(language: string): void {
     assertIs(language, 'language', ['string']);
-    const key = PDFName.of('Lang');
+    const key = PDFName.Lang;
     this.catalog.set(key, PDFString.of(language));
   }
 
@@ -470,7 +482,7 @@ export default class PDFDocument {
    */
   setCreationDate(creationDate: Date): void {
     assertIs(creationDate, 'creationDate', [[Date, 'Date']]);
-    const key = PDFName.of('CreationDate');
+    const key = PDFName.CreationDate;
     this.getInfoDict().set(key, PDFString.fromDate(creationDate));
   }
 
@@ -485,8 +497,95 @@ export default class PDFDocument {
    */
   setModificationDate(modificationDate: Date): void {
     assertIs(modificationDate, 'modificationDate', [[Date, 'Date']]);
-    const key = PDFName.of('ModDate');
+    const key = PDFName.ModDate;
     this.getInfoDict().set(key, PDFString.fromDate(modificationDate));
+  }
+
+
+  /**
+   * Get the root outline hierarchy of the document (12.3.3). For
+   * example:
+   * ```js
+   * const outlines = pdfDoc.getOutlines()
+   * ```
+   * @returns the root outlines for this document.
+   */
+  getOutlines(): PDFOutline[] {
+    return this.outlineCache.access();
+  }
+
+  /**
+   * Get the number of outlines contained in this document. For example:
+   * ```js
+   * const totalOutlines = pdfDoc.getOutlineCount()
+   * ```
+   * @returns The number of outlines in this document.
+   */
+  getOutlineCount(): number {
+    return this.catalog.Outlines().children.length;
+  }
+
+  /**
+   * Add a top-level outline to the end of this document's outline hierarchy. This method accepts
+   * three prameters: 
+   * 1) title, as a text string, 2) expanded, a boolean, and 3) Dest, a page reference to link:
+   * 
+   *
+   * For example:
+   * ```js
+   * const newPage = pdfDoc.addPage()
+   * const newOutline = pdfDoc.addOutline('title', true, newPage)
+   * ```
+   *
+   * @param title, the desired title of the outline.
+   * @param expanded Optionally, boolean of whether you want the outline to be expanded.
+   * @param page Optionally, the page to link the outline to.
+   * @returns The newly created outline.
+   */
+  addOutline(title: string, options?: outlineOptions): PDFOutline {
+    assertIs(title, 'title', ['string']);
+    if (options?.expanded) assertIs(options?.expanded, 'expanded', ['boolean']);
+    if (options?.linkToPage)
+      assertRange(options?.linkToPage, 'linkToPage', 0, this.getPageCount());
+    return this.insertOutline(this.getOutlineCount(), title, options);
+  }
+
+  /**
+   * Add a top-level outline at the index of this document's outline hierarchy.  
+   * This method accepts three prameters: 
+   * 1) index, number where to insert, 2) title, as a text string, 
+   * 3) expanded, a boolean, and 4) Dest, a page reference to link:
+   * 
+   *
+   * For example to insert outline as the third outline:
+   * ```js
+   * const newPage = pdfDoc.addPage()
+   * const newOutline = pdfDoc.addOutline(2, 'title', true, newPage)
+   * ```
+   *
+   * @param index The index at which the page should be inserted (zero-based).
+   * @param title The desired title of the outline.
+   * @param expanded Optionally, boolean of whether you want the outline to be expanded.
+   * @param page Optionally, the page to link the outline to.
+   * @returns The newly created outline.
+   */
+  insertOutline(index: number, title: string, options?: outlineOptions): PDFOutline {
+    const outlineCount = this.getOutlineCount();
+    assertRange(index, 'index', 0, outlineCount);
+    assertIs(title, 'title', ['string']);
+    if (options?.expanded) assertIs(options?.expanded, 'expanded', ['boolean']);
+    if (options?.linkToPage) assertRange(options?.linkToPage, 'linkToPage', 0, this.getPageCount());
+
+    const outline = PDFOutline.create(this, title, options);
+    const parentRef = this.catalog.insertOutlineItem(outline.ref, index);
+    outline.node.setParent(parentRef);
+
+    if (options?.linkToPage) {
+      const page = this.getPage(options?.linkToPage);
+      outline.node.setDest(page.ref);
+    }
+
+    return outline;
   }
 
   /**
@@ -605,6 +704,7 @@ export default class PDFDocument {
     assertIs(page, 'page', ['undefined', [PDFPage, 'PDFPage'], Array]);
     return this.insertPage(this.getPageCount(), page);
   }
+
 
   /**
    * Insert a page at a given index within this document. This method accepts
@@ -1019,6 +1119,10 @@ export default class PDFDocument {
     return embeddedPages;
   }
 
+  endOutline() {
+    this.catalog.Outlines().endOutline();
+  }
+
   /**
    * > **NOTE:** You shouldn't need to call this method directly. The [[save]]
    * > and [[saveAsBase64]] methods will automatically ensure that all embedded
@@ -1061,6 +1165,8 @@ export default class PDFDocument {
     assertIs(useObjectStreams, 'useObjectStreams', ['boolean']);
     assertIs(addDefaultPage, 'addDefaultPage', ['boolean']);
     assertIs(objectsPerTick, 'objectsPerTick', ['number']);
+
+    await this.endOutline();
 
     if (addDefaultPage && this.getPageCount() === 0) this.addPage();
     await this.flush();
@@ -1107,8 +1213,8 @@ export default class PDFDocument {
     this.setProducer(pdfLib);
     this.setModificationDate(now);
 
-    if (!info.get(PDFName.of('Creator'))) this.setCreator(pdfLib);
-    if (!info.get(PDFName.of('CreationDate'))) this.setCreationDate(now);
+    if (!info.get(PDFName.Creator)) this.setCreator(pdfLib);
+    if (!info.get(PDFName.CreationDate)) this.setCreationDate(now);
   }
 
   private getInfoDict(): PDFDict {
@@ -1125,6 +1231,21 @@ export default class PDFDocument {
     if (!this.fontkit) throw new FontkitNotRegisteredError();
     return this.fontkit;
   }
+
+  private computeOutlines = (): PDFOutline[] => {
+    const outlines: PDFOutline[] = [];
+    this.catalog.Outlines().traverse((node, ref) => {
+      if (node instanceof PDFOutline) {
+        let outline = this.outlineMap.get(node);
+        if (!outline) {
+          outline = PDFOutline.of(node, ref, this);
+          this.outlineMap.set(node, outline);
+        }
+        outlines.push(outline);
+      }
+    });
+    return outlines;
+  };
 
   private computePages = (): PDFPage[] => {
     const pages: PDFPage[] = [];
