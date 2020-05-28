@@ -1,6 +1,5 @@
 import PDFDict, { DictMap } from 'src/core/objects/PDFDict';
 import PDFName from 'src/core/objects/PDFName';
-import PDFString from 'src/core/objects/PDFString';
 import PDFRef from 'src/core/objects/PDFRef';
 import PDFContext from 'src/core/PDFContext';
 import PDFOutlines from 'src/core/structures/PDFOutlines';
@@ -17,7 +16,7 @@ class PDFCatalog extends PDFDict {
     dict.set(PDFName.Type, PDFName.Catalog);
     dict.set(PDFName.Pages, pages);
     dict.set(PDFName.Outlines, outlines);
-    if (useOutlines) dict.set(PDFName.PageMode, PDFString.of('UseOutlines'));
+    if (useOutlines) dict.set(PDFName.PageMode, PDFName.UseOutlines);
     return new PDFCatalog(dict, context);
   };
 

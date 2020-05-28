@@ -35,6 +35,7 @@ class PDFName extends PDFObject {
 
   /* tslint:disable member-ordering */
   static readonly PageMode = PDFName.of('PageMode');
+  static readonly UseOutlines = PDFName.of('UseOutlines');
   static readonly Root = PDFName.of('Root');
   static readonly Encrypt = PDFName.of('Encrypt');
   static readonly Info = PDFName.of('Info');
