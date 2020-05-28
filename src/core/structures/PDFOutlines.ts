@@ -69,7 +69,7 @@ class PDFOutlines extends PDFDict {
   }
 
   setDest(dest: PDFRef): void {
-    this.set(PDFName.Dest, this.context.obj([dest]));
+    this.set(PDFName.Dest, this.context.obj([dest, PDFName.Fit]));
   }
 
   pushOutlineItem(outlineRef: PDFRef): void {

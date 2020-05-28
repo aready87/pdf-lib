@@ -174,14 +174,14 @@ export default class PDFDocument {
    * @returns Resolves with the newly created document.
    */
   static async create(options: CreateOptions = {}) {
-    const { updateMetadata = true, useOutlines } = options;
+    const { updateMetadata = true } = options;
 
     const context = PDFContext.create();
     const pageTree = PDFPageTree.withContext(context);
     const pageTreeRef = context.register(pageTree);
     const outlines = PDFOutlines.withContext(context, { expanded: true });
     const outlinesRef = context.register(outlines);
-    const catalog = PDFCatalog.withContextAndPages(context, pageTreeRef, outlinesRef, useOutlines);
+    const catalog = PDFCatalog.withContextAndPages(context, pageTreeRef, outlinesRef, options);
     context.trailerInfo.Root = context.register(catalog);
 
     return new PDFDocument(context, false, updateMetadata);
@@ -515,7 +515,7 @@ export default class PDFDocument {
   }
 
   /**
-   * Get the number of outlines contained in this document. For example:
+   * Get the number of top-level outlines contained in this document. For example:
    * ```js
    * const totalOutlines = pdfDoc.getOutlineCount()
    * ```
@@ -1119,6 +1119,10 @@ export default class PDFDocument {
     return embeddedPages;
   }
 
+  /**
+   * This will traverse through all the outlines and add the required fields,
+   * including counting number of expanded children.
+  */
   endOutline() {
     this.catalog.Outlines().endOutline();
   }

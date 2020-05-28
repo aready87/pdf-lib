@@ -4,19 +4,21 @@ import PDFRef from 'src/core/objects/PDFRef';
 import PDFContext from 'src/core/PDFContext';
 import PDFOutlines from 'src/core/structures/PDFOutlines';
 import PDFPageTree from 'src/core/structures/PDFPageTree';
+import { CreateOptions } from 'src/api/PDFDocument';
+
 
 class PDFCatalog extends PDFDict {
   static withContextAndPages = (
     context: PDFContext,
     pages: PDFPageTree | PDFRef,
     outlines: PDFOutlines | PDFRef,
-    useOutlines?: boolean,
+    options?: CreateOptions,
   ) => {
     const dict = new Map();
     dict.set(PDFName.Type, PDFName.Catalog);
     dict.set(PDFName.Pages, pages);
     dict.set(PDFName.Outlines, outlines);
-    if (useOutlines) dict.set(PDFName.PageMode, PDFName.UseOutlines);
+    if (options?.useOutlines) dict.set(PDFName.PageMode, PDFName.UseOutlines);
     return new PDFCatalog(dict, context);
   };
 
