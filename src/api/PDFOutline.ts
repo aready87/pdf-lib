@@ -21,7 +21,7 @@ export default class PDFOutline {
    * > Then with a [[PDFOutline]], you can also use [[PDFOutline.addOutline]] and 
    * > [[PDFOutline.insertOutline]] to create a nested outline.
    *
-   * Create an instance of [[PDFOutline]] from an existing leaf node.
+   * Create an instance of [[PDFOutline]] from an existing outline node.
    *
    * @param outlineNode The outline node to be wrapped.
    * @param ref The unique reference for the outline.
@@ -40,6 +40,8 @@ export default class PDFOutline {
    * Create an instance of [[PDFOutline]].
    *
    * @param doc The document to which the outline will belong.
+   * @param title The title of the outline.
+   * @param outlineOptions The outline options.
    */
   static create = (doc: PDFDocument, title: string, options?: outlineOptions) => {
     assertIs(doc, 'doc', [[PDFDocument, 'PDFDocument']]);
@@ -55,13 +57,13 @@ export default class PDFOutline {
     return new PDFOutline(outlineItem, outlineRef, doc);
   };
 
-  /** The low-level PDFDictionary wrapped by this page. */
+  /** The low-level PDFDictionary wrapped by this outline. */
   readonly node: PDFOutlines;
 
-  /** The unique reference assigned to this page within the document. */
+  /** The unique reference assigned to this outline within the document. */
   readonly ref: PDFRef;
 
-  /** The document to which this page belongs. */
+  /** The document to which this outline belongs. */
   readonly doc: PDFDocument;
 
 
@@ -80,9 +82,9 @@ export default class PDFOutline {
     this.node.setTitle(title);
   }
 
-  linkToPage(linkToPage: number): void {
-    assertRange(linkToPage, 'linkToPage', 0, this.doc.getPageCount());
-    const page = this.doc.getPage(linkToPage - 1);
+  linkToPage(index: number): void {
+    assertRange(index, 'index', 0, this.doc.getPageCount());
+    const page = this.doc.getPage(index - 1);
     this.node.setDest(page.ref);
   }
 
