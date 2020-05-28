@@ -127,7 +127,7 @@ export default class PDFOutline {
     outline.node.setParent(parentRef);
 
     if (options?.linkToPage) {
-      const page = this.doc.getPage(options?.linkToPage);
+      const page = this.doc.getPage(options?.linkToPage - 1);
       outline.node.setDest(page.ref);
     }
 
