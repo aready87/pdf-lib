@@ -14,6 +14,7 @@ import { PDFDocument } from 'src/index';
   pdfDoc.addPage();
   pdfDoc.addPage();
   
+  // const first = 
   pdfDoc.addOutline('First Outline', { expanded: true, linkToPage: 1 });
   const outline = pdfDoc.addOutline('Second Outline (page2)', {
     expanded: true,
@@ -31,6 +32,14 @@ import { PDFDocument } from 'src/index';
 
   pdfDoc.addOutline('Third Outline (Page6)', { expanded: true, linkToPage: 6 });
   pdfDoc.addOutline('Fourth Outline (Page7)', { expanded: true, linkToPage: 7 });
+
+  suboutline.setTitle('Changed title');
+  outline.linkToPage(7);
+  suboutline.setExpanded(false);
+
+  // suboutline.remove();
+  // outline.remove();
+  // first.remove();
 
   const page = pdfDoc.addPage();
 

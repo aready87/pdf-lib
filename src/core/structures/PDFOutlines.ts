@@ -52,10 +52,6 @@ class PDFOutlines extends PDFDict {
     this.options = options;
   }
 
-  getPageRef() {
-    return true;
-  }
-
   Parent(): PDFOutlines {
     return this.lookupMaybe(PDFName.Parent, PDFDict) as PDFOutlines;
   }
@@ -66,6 +62,30 @@ class PDFOutlines extends PDFDict {
 
   setParent(parentRef: PDFRef): void {
     this.set(PDFName.Parent, parentRef);
+  }
+
+  setTitle(title: string): void {
+    this.set(PDFName.Title, PDFString.of(title));
+  }
+
+  setExpanded(expanded: boolean): void {
+    this.options.expanded = expanded;
+  }
+
+  removeChild(targetIndex: number): void {
+    this.context.delete(this.children[targetIndex]);
+    this.children.splice(targetIndex, 1);
+  }
+
+  removeChildren(): void {
+    if (this.children.length > 0) {
+      for (let idx = this.children.length - 1; idx >= 0; idx--) {
+        const childRef = this.children[idx] as PDFRef;
+        const child = this.context.lookup(childRef) as PDFOutlines;
+        child.removeChildren();
+        this.removeChild(idx);
+      }
+    }
   }
 
   /**

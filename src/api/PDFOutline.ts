@@ -3,6 +3,7 @@ import {
   PDFOutlines,
   outlineOptions,
   PDFRef,
+  PDFName,
 } from 'src/core';
 import {
   assertIs,
@@ -74,6 +75,34 @@ export default class PDFOutline {
     this.doc = doc;
   }
 
+  setTitle(title: string): void {
+    assertIs(title, 'title', ['string']);
+    this.node.setTitle(title);
+  }
+
+  linkToPage(linkToPage: number): void {
+    assertRange(linkToPage, 'linkToPage', 0, this.doc.getPageCount());
+    const page = this.doc.getPage(linkToPage - 1);
+    this.node.setDest(page.ref);
+  }
+
+  setExpanded(expanded: boolean): void {
+    assertIs(expanded, 'expanded', ['boolean']);
+    this.node.setExpanded(expanded);
+  }
+
+  /**
+   * Remove an outline with all its progenies.
+   * First, traverse through and delete all children.
+   * Second, delete itself from its Parent's children array.
+   */
+  remove(): void {
+    this.node.removeChildren();
+    const parent = this.node.get(PDFName.Parent);
+    const parentOutline = this.doc.context.lookup(parent, PDFOutlines) as PDFOutlines;
+    const idx = parentOutline.children.findIndex((ref) => ref === this.ref);
+    parentOutline.removeChild(idx);
+ }
 
   /**
    * Add an outline as a child at the end of this outline. This method accepts
