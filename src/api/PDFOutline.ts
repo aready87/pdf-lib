@@ -17,6 +17,8 @@ export default class PDFOutline {
    * > **NOTE:** You probably don't want to call this method directly. Instead,
    * > consider using the [[PDFDocument.addOutline]] and [[PDFDocument.insertOutline]]
    * > methods, which can create instances of [[PDFOutline]] for you.
+   * > Then with a [[PDFOutline]], you can also use [[PDFOutline.addOutline]] and 
+   * > [[PDFOutline.insertOutline]] to create a nested outline.
    *
    * Create an instance of [[PDFOutline]] from an existing leaf node.
    *
@@ -31,6 +33,8 @@ export default class PDFOutline {
    * > **NOTE:** You probably don't want to call this method directly. Instead,
    * > consider using the [[PDFDocument.addOutline]] and [[PDFDocument.insertOutline]]
    * > methods, which can create instances of [[PDFOutline]] for you.
+   * > Then with a [[PDFOutline]], you can also use [[PDFOutline.addOutline]] and
+   * > [[PDFOutline.insertOutline]] to create a nested outline.
    *
    * Create an instance of [[PDFOutline]].
    *
@@ -61,7 +65,7 @@ export default class PDFOutline {
 
 
   private constructor(outlineNode: PDFOutlines, ref: PDFRef, doc: PDFDocument) {
-    // assertIs(outlineNode, 'outlineNode', [[PDFOutlines, 'PDFOutlines']]);
+    assertIs(outlineNode, 'outlineNode', [[PDFOutlines, 'PDFOutlines']]);
     assertIs(ref, 'ref', [[PDFRef, 'PDFRef']]);
     assertIs(doc, 'doc', [[PDFDocument, 'PDFDocument']]);
 
@@ -72,21 +76,24 @@ export default class PDFOutline {
 
 
   /**
-   * Add a outlineItem as a child to the end of this outlineItem. This method accepts
-   * three prameters:
-   * 1) title, as a text string, 2) expanded, a boolean, and 3) Dest, a page reference to link:
-   *
+   * Add an outline as a child at the end of this outline. This method accepts
+   * two prameters:
+   * 1) title, as a text string, 2) an object with two optional variables: i) expanded, a boolean
+   * to flag whether its suboutlines should be expanded, and ii) linkToPage, an integer of the page
+   * number to link the bookmark to.
    *
    * For example:
    * ```js
    * const newPage = pdfDoc.addPage()
    * const newOutline = pdfDoc.addOutline('title')
-   * const childOutline = newOutline.addOutline('title2')
+   * const nestedOutline = newOutline.addOutline('title2', { expanded: true, linkToPage: 1 })
    * ```
-   *
-   * @param title The desired title of the outline.
-   * @param options Optionally, boolean of whether you want the outline to be expanded.
-   * @returns The newly created outline.
+   * This will add a nested outline labeled "title2", with an expanded view and direct user to
+   * the first page when clicked on.
+   * 
+   * @param title, the desired title of the nested outline.
+   * @param outlineOptions object that may contain expanded and/or linkToPage.
+   * @returns The newly created nested outline.
    */
   addOutline(title: string, options?: outlineOptions): PDFOutline {
     assertIs(title, 'title', ['string']);
@@ -97,22 +104,25 @@ export default class PDFOutline {
   }
 
   /**
-   * Add a outlineItem as a child at the index of this outlineItem.
+   * Add a nested outline at the index of this current outline.
    * This method accepts three prameters:
    * 1) index, number where to insert, 2) title, as a text string,
-   * 3) expanded, a boolean, and 4) Dest, a page reference to link:
+   * 3) an object with two optional variables: i) expanded, a boolean
+   * to flag whether its suboutlines should be expanded, and ii) linkToPage, an integer of the 
+   * page number to link the bookmark to.
    *
    *
    * For example to insert outline as the third outline:
    * ```js
    * const newPage = pdfDoc.addPage()
    * const newOutline = pdfDoc.addOutline('title')
-   * const childOutline = newOutline.addOutline(2, 'title2')
+   * const childOutline = newOutline.addOutline(2, 'title', { expanded: true, linkToPage: 2})
    * ```
    *
    * @param index The index at which the page should be inserted (zero-based).
    * @param title The desired title of the outline.
-   * @returns The newly created outline.
+   * @param outlineOptions object that may contain expanded and/or linkToPage.
+   * @returns The newly created nested outline.
    */
   insertOutline(index: number, title: string, options?: outlineOptions): PDFOutline {
     const outlineCount = this.node.children.length;

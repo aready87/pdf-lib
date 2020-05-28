@@ -77,6 +77,10 @@ export interface LoadOptions {
   capNumbers?: boolean;
 }
 
+/**
+ * useOutlines is a boolean flag whether the view when the document is opened
+ * is to have the bookmark panel opened. Belongs to Catalog.
+ */
 export interface CreateOptions {
   updateMetadata?: boolean;
   useOutlines?: boolean;
@@ -527,19 +531,21 @@ export default class PDFDocument {
 
   /**
    * Add a top-level outline to the end of this document's outline hierarchy. This method accepts
-   * three prameters: 
-   * 1) title, as a text string, 2) expanded, a boolean, and 3) Dest, a page reference to link:
+   * two prameters: 
+   * 1) title, as a text string, 2) an object with two optional variables: i) expanded, a boolean 
+   * to flag whether its suboutlines should be expanded, and ii) linkToPage, an integer of the page 
+   * number to link the bookmark to.
    * 
-   *
    * For example:
    * ```js
    * const newPage = pdfDoc.addPage()
-   * const newOutline = pdfDoc.addOutline('title', true, newPage)
+   * const newOutline = pdfDoc.addOutline('title', { expanded: true, linkToPage: 1})
    * ```
-   *
+   * This will add a top-level outline labeled "title", with an expanded view and direct user to
+   * the first page when clicked on.
+   * 
    * @param title, the desired title of the outline.
-   * @param expanded Optionally, boolean of whether you want the outline to be expanded.
-   * @param page Optionally, the page to link the outline to.
+   * @param outlineOptions object that may contain expanded and/or linkToPage.
    * @returns The newly created outline.
    */
   addOutline(title: string, options?: outlineOptions): PDFOutline {
@@ -554,19 +560,20 @@ export default class PDFDocument {
    * Add a top-level outline at the index of this document's outline hierarchy.  
    * This method accepts three prameters: 
    * 1) index, number where to insert, 2) title, as a text string, 
-   * 3) expanded, a boolean, and 4) Dest, a page reference to link:
+   * 3) an object with two optional variables: i) expanded, a boolean
+   * to flag whether its suboutlines should be expanded, and ii) linkToPage, an integer of the
+   * page number to link the bookmark to.
    * 
    *
    * For example to insert outline as the third outline:
    * ```js
    * const newPage = pdfDoc.addPage()
-   * const newOutline = pdfDoc.addOutline(2, 'title', true, newPage)
+   * const newOutline = pdfDoc.addOutline(2, 'title', { expanded: true, linkToPage: 2})
    * ```
    *
    * @param index The index at which the page should be inserted (zero-based).
    * @param title The desired title of the outline.
-   * @param expanded Optionally, boolean of whether you want the outline to be expanded.
-   * @param page Optionally, the page to link the outline to.
+   * @param outlineOptions object that may contain expanded and/or linkToPage.
    * @returns The newly created outline.
    */
   insertOutline(index: number, title: string, options?: outlineOptions): PDFOutline {
@@ -704,7 +711,6 @@ export default class PDFDocument {
     assertIs(page, 'page', ['undefined', [PDFPage, 'PDFPage'], Array]);
     return this.insertPage(this.getPageCount(), page);
   }
-
 
   /**
    * Insert a page at a given index within this document. This method accepts
@@ -1120,8 +1126,9 @@ export default class PDFDocument {
   }
 
   /**
-   * This will traverse through all the outlines and add the required fields,
-   * including counting number of expanded children.
+   * This will traverse through all the outlines and add the required fields and
+   * also update Count of expanded children. The Count for outlines works differently
+   * than Pages, hence it is better to do it at the end.
   */
   endOutline() {
     this.catalog.Outlines().endOutline();

@@ -68,6 +68,11 @@ class PDFOutlines extends PDFDict {
     this.set(PDFName.Parent, parentRef);
   }
 
+  /**
+   * PDFName.Fit is necessary for the link to Dest to work on Apple Preview.
+   * Without it, the linking will work on Adobe Acrobat, Chrome, and others,
+   * but not on Apple Preview.
+   */
   setDest(dest: PDFRef): void {
     this.set(PDFName.Dest, this.context.obj([dest, PDFName.Fit]));
   }
@@ -77,11 +82,11 @@ class PDFOutlines extends PDFDict {
   }
 
   /**
-   * Inserts the given ref of an outlines node as a child of this PDFOutlines node at the
-   * specified index (zero-based). Also increments the `Count` of each outlines node in the
-   * hierarchy to accomodate the new outlines.
+   * Inserts the given ref of an outline node as a child of this PDFOutlines node at the
+   * specified index (zero-based). The `Count` will be recalculated before
+   * save.
    *
-   * Returns the ref of the inserted PDFOutlines node.
+   * Returns the ref of the parent node.
    */
   insertOutlineItem(
     parentRef: PDFRef,
@@ -92,9 +97,6 @@ class PDFOutlines extends PDFDict {
       throw new InvalidTargetIndexError(targetIndex, this.children.length);
     }
     this.children.splice(targetIndex, 0, outlineRef);
-    const newCount = this.Count().asNumber() + 1;
-    this.set(PDFName.Count, PDFNumber.of(newCount));
-
     return parentRef;
   }
 
@@ -109,14 +111,21 @@ class PDFOutlines extends PDFDict {
     }
   }
 
-  /** Performs a cleanup before Save
-   * assigns First, Last, Prev and Next and also updates Count,
+  /** Performs assignment and calculation before Save.
+   * Assigns First, Last, Prev and Next and also updates Count,
    * which is calculated differently than how Pages get calculated
    * (12.3.3 Table 152)
    *
    * Heavily inspired by PSDKit: https://github.com/foliojs/pdfkit
    */
   endOutline(): number {
+    /** Count for Outlines is different from Count for Pages.
+     * Count for an Outline is the total number of its expanded/viewable progenies
+     * at the open of a PDF. So this traverses through all its progenies and
+     * adds up all the children/grandchildren that have expanded view and have children.
+     * Ones without expanded view or without a child, their `Count` will remain at 0.
+     * (12.3.3 Table 152 and Exhibit H)
+     */
     let childrenCount = 0;
     if (this.children.length > 0) {
       const first = this.children[0];
@@ -124,25 +133,22 @@ class PDFOutlines extends PDFDict {
       this.set(PDFName.First, first);
       this.set(PDFName.Last, last);
 
-      for (let i = 0, len = this.children.length; i < len; i++) {
-        const childRef = this.children[i] as PDFRef;
+      for (let idx = 0, len = this.children.length; idx < len; idx++) {
+        const childRef = this.children[idx] as PDFRef;
         const child = this.context.lookup(childRef) as PDFOutlines;
-        if (i > 0) {
-          child.set(PDFName.Prev, this.children[i - 1]);
+        if (idx > 0) {
+          child.set(PDFName.Prev, this.children[idx - 1]);
         }
-        if (i < this.children.length - 1) {
-          child.set(PDFName.Next, this.children[i + 1]);
+        if (idx < this.children.length - 1) {
+          child.set(PDFName.Next, this.children[idx + 1]);
         }
         childrenCount += child.endOutline();
       }
     }
     if (this.options?.expanded) {
-      this.set(
-        PDFName.Count,
-        PDFNumber.of(this.children.length + childrenCount),
-      );
+      this.set(PDFName.Count, PDFNumber.of(this.children.length + childrenCount));
     }
-    return this.options?.expanded ? this.children.length : 0;
+    return this.options?.expanded ? this.children.length + childrenCount : 0;
   }
 }
 

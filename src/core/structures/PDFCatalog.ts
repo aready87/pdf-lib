@@ -6,7 +6,6 @@ import PDFOutlines from 'src/core/structures/PDFOutlines';
 import PDFPageTree from 'src/core/structures/PDFPageTree';
 import { CreateOptions } from 'src/api/PDFDocument';
 
-
 class PDFCatalog extends PDFDict {
   static withContextAndPages = (
     context: PDFContext,
@@ -51,10 +50,11 @@ class PDFCatalog extends PDFDict {
   }
 
   /**
-   * Inserts the given ref as a top-level outline node of this catalog's outline tree at the
-   * specified index (zero-based).
+   * Inserts the given ref as a top-level outline of this catalog's outlines at the
+   * specified index (zero-based). The `Count` will be recalculated before
+   * save.
    *
-   * Returns the ref of the PDFOutlineItem node into which `outlineRef` was inserted.
+   * Returns the ref of the PDFOutline into which `outlineRef` was inserted.
    */
   insertOutlineItem(outlineRef: PDFRef, index: number): PDFRef {
     const outlinesRef = this.get(PDFName.Outlines) as PDFRef;
