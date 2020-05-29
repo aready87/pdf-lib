@@ -6,12 +6,11 @@ import PDFRef from 'src/core/objects/PDFRef';
 import PDFContext from 'src/core/PDFContext';
 import { InvalidTargetIndexError } from 'src/core/errors';
 
-
 export type OutlineNode = PDFOutlines;
 
 export interface outlineOptions {
-  expanded?: boolean,
-  linkToPage?: number,
+  expanded?: boolean;
+  linkToPage?: number;
 }
 
 class PDFOutlines extends PDFDict {
@@ -39,7 +38,7 @@ class PDFOutlines extends PDFDict {
     options?: outlineOptions,
   ) => new PDFOutlines(map, context, options);
 
-  readonly children: Array<PDFRef>;
+  readonly children: PDFRef[];
   private readonly options: outlineOptions;
 
   protected constructor(
@@ -162,7 +161,10 @@ class PDFOutlines extends PDFDict {
       }
     }
     if (this.options?.expanded) {
-      this.set(PDFName.Count, PDFNumber.of(this.children.length + childrenCount));
+      this.set(
+        PDFName.Count,
+        PDFNumber.of(this.children.length + childrenCount),
+      );
     }
     return this.options?.expanded ? this.children.length + childrenCount : 0;
   }

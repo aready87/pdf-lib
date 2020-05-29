@@ -62,10 +62,7 @@ class PDFPageLeaf extends PDFDict {
   }
 
   Contents(): PDFStream | PDFArray | undefined {
-    return this.lookup(PDFName.Contents) as
-      | PDFStream
-      | PDFArray
-      | undefined;
+    return this.lookup(PDFName.Contents) as PDFStream | PDFArray | undefined;
   }
 
   Annots(): PDFArray | undefined {

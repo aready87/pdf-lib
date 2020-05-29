@@ -195,9 +195,9 @@ class PDFObjectParser extends BaseParser {
 
     if (Type === PDFName.Catalog) {
       return PDFCatalog.fromMapWithContext(dict, this.context);
-    //TODO: grab outlines from loaded PDFs
-    // } else if (Type === PDFName.Outlines) {
-    //   return PDFOutlines.fromMapWithContext(dict, this.context);
+      // TODO: grab outlines from loaded PDFs
+      // } else if (Type === PDFName.Outlines) {
+      //   return PDFOutlines.fromMapWithContext(dict, this.context);
     } else if (Type === PDFName.Pages) {
       return PDFPageTree.fromMapWithContext(dict, this.context);
     } else if (Type === PDFName.Page) {

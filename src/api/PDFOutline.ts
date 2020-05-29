@@ -1,14 +1,6 @@
 import PDFDocument from 'src/api/PDFDocument';
-import {
-  PDFOutlines,
-  outlineOptions,
-  PDFRef,
-  PDFName,
-} from 'src/core';
-import {
-  assertIs,
-  assertRange,
-} from 'src/utils';
+import { PDFOutlines, outlineOptions, PDFRef, PDFName } from 'src/core';
+import { assertIs, assertRange } from 'src/utils';
 
 /**
  * Represents a single outline of a [[PDFDocument]].
@@ -18,7 +10,7 @@ export default class PDFOutline {
    * > **NOTE:** You probably don't want to call this method directly. Instead,
    * > consider using the [[PDFDocument.addOutline]] and [[PDFDocument.insertOutline]]
    * > methods, which can create instances of [[PDFOutline]] for you.
-   * > Then with a [[PDFOutline]], you can also use [[PDFOutline.addOutline]] and 
+   * > Then with a [[PDFOutline]], you can also use [[PDFOutline.addOutline]] and
    * > [[PDFOutline.insertOutline]] to create a nested outline.
    *
    * Create an instance of [[PDFOutline]] from an existing outline node.
@@ -43,7 +35,11 @@ export default class PDFOutline {
    * @param title The title of the outline.
    * @param outlineOptions The outline options.
    */
-  static create = (doc: PDFDocument, title: string, options?: outlineOptions) => {
+  static create = (
+    doc: PDFDocument,
+    title: string,
+    options?: outlineOptions,
+  ) => {
     assertIs(doc, 'doc', [[PDFDocument, 'PDFDocument']]);
     const dummyRef = PDFRef.of(-1);
     const outlineItem = PDFOutlines.withContext(
@@ -52,7 +48,7 @@ export default class PDFOutline {
       title,
       dummyRef,
     );
- 
+
     const outlineRef = doc.context.register(outlineItem);
     return new PDFOutline(outlineItem, outlineRef, doc);
   };
@@ -100,10 +96,13 @@ export default class PDFOutline {
   remove(): void {
     this.node.removeChildren();
     const parent = this.node.get(PDFName.Parent);
-    const parentOutline = this.doc.context.lookup(parent, PDFOutlines) as PDFOutlines;
+    const parentOutline = this.doc.context.lookup(
+      parent,
+      PDFOutlines,
+    ) as PDFOutlines;
     const idx = parentOutline.children.findIndex((ref) => ref === this.ref);
     parentOutline.removeChild(idx);
- }
+  }
 
   /**
    * Add an outline as a child at the end of this outline. This method accepts
@@ -120,7 +119,7 @@ export default class PDFOutline {
    * ```
    * This will add a nested outline labeled "title2", with an expanded view and direct user to
    * the first page when clicked on.
-   * 
+   *
    * @param title, the desired title of the nested outline.
    * @param outlineOptions object that may contain expanded and/or linkToPage.
    * @returns The newly created nested outline.
@@ -128,8 +127,14 @@ export default class PDFOutline {
   addOutline(title: string, options?: outlineOptions): PDFOutline {
     assertIs(title, 'title', ['string']);
     if (options?.expanded) assertIs(options?.expanded, 'expanded', ['boolean']);
-    if (options?.linkToPage)
-      assertRange(options?.linkToPage, 'linkToPage', 0, this.doc.getPageCount());
+    if (options?.linkToPage) {
+      assertRange(
+        options?.linkToPage,
+        'linkToPage',
+        0,
+        this.doc.getPageCount(),
+      );
+    }
     return this.insertOutline(this.node.children.length, title, options);
   }
 
@@ -138,7 +143,7 @@ export default class PDFOutline {
    * This method accepts three prameters:
    * 1) index, number where to insert, 2) title, as a text string,
    * 3) an object with two optional variables: i) expanded, a boolean
-   * to flag whether its suboutlines should be expanded, and ii) linkToPage, an integer of the 
+   * to flag whether its suboutlines should be expanded, and ii) linkToPage, an integer of the
    * page number to link the bookmark to.
    *
    *
@@ -154,13 +159,23 @@ export default class PDFOutline {
    * @param outlineOptions object that may contain expanded and/or linkToPage.
    * @returns The newly created nested outline.
    */
-  insertOutline(index: number, title: string, options?: outlineOptions): PDFOutline {
+  insertOutline(
+    index: number,
+    title: string,
+    options?: outlineOptions,
+  ): PDFOutline {
     const outlineCount = this.node.children.length;
     assertRange(index, 'index', 0, outlineCount);
     assertIs(title, 'title', ['string']);
     if (options?.expanded) assertIs(options?.expanded, 'expanded', ['boolean']);
-    if (options?.linkToPage)
-      assertRange(options?.linkToPage, 'linkToPage', 0, this.doc.getPageCount());
+    if (options?.linkToPage) {
+      assertRange(
+        options?.linkToPage,
+        'linkToPage',
+        0,
+        this.doc.getPageCount(),
+      );
+    }
 
     const outline = PDFOutline.create(this.doc, title, options);
     const parentRef = this.node.insertOutlineItem(this.ref, outline.ref, index);
