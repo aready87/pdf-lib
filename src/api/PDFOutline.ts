@@ -147,7 +147,7 @@ export default class PDFOutline {
    * ```js
    * const newPage = pdfDoc.addPage()
    * const newOutline = pdfDoc.addOutline('title')
-   * const childOutline = newOutline.addOutline(2, 'title', { expanded: true, linkToPage: 2})
+   * const childOutline = newOutline.insertOutline(2, 'title', { expanded: true, linkToPage: 2 })
    * ```
    *
    * @param index The index at which the page should be inserted (zero-based).

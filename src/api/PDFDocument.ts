@@ -568,7 +568,7 @@ export default class PDFDocument {
    * For example to insert outline as the third outline:
    * ```js
    * const newPage = pdfDoc.addPage()
-   * const newOutline = pdfDoc.addOutline(2, 'title', { expanded: true, linkToPage: 2})
+   * const newOutline = pdfDoc.insertOutline(2, 'title', { expanded: true, linkToPage: 2 })
    * ```
    *
    * @param index The index at which the page should be inserted (zero-based).
