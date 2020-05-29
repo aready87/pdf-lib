@@ -18,7 +18,7 @@ import { PDFDocument } from 'src/index';
   // const first = 
   pdfDoc.addOutline('First Outline', { expanded: true, linkToPage: 0 });
   const outline = pdfDoc.addOutline('Second Outline (page2)', {
-    expanded: true,
+    expanded: false,
     linkToPage: 1,
   });
   const suboutline = outline.addOutline('Child of Second (page3)', {
@@ -27,6 +27,15 @@ import { PDFDocument } from 'src/index';
   });
   suboutline.addOutline('Grandchild of Second (page4)', { expanded: true, linkToPage: 3 });
   outline.addOutline('Another Child of Second (page5)', {
+    expanded: true,
+    linkToPage: 4,
+  });
+  const thirdChild = outline.addOutline('3rd Child of Second (page5)', {
+    expanded: false,
+    linkToPage: 4,
+  });
+  thirdChild.addOutline('3rd`s progeny');
+  outline.addOutline('4th Child of Second (page5)', {
     expanded: true,
     linkToPage: 4,
   });

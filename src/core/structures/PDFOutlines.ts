@@ -28,7 +28,6 @@ class PDFOutlines extends PDFDict {
       dict.set(PDFName.Parent, parent);
       dict.set(PDFName.Count, context.obj(0));
     }
-    dict.set(PDFName.Count, context.obj(0));
     return new PDFOutlines(dict, context, options);
   };
 
@@ -53,10 +52,6 @@ class PDFOutlines extends PDFDict {
 
   Parent(): PDFOutlines {
     return this.lookupMaybe(PDFName.Parent, PDFDict) as PDFOutlines;
-  }
-
-  Count(): PDFNumber {
-    return this.lookup(PDFName.Count, PDFNumber);
   }
 
   setParent(parentRef: PDFRef): void {
@@ -135,19 +130,24 @@ class PDFOutlines extends PDFDict {
    */
   endOutline(): number {
     /** Count for Outlines is different from Count for Pages.
-     * Count for an Outline is the total number of its expanded/viewable progenies
-     * at the open of a PDF. So this traverses through all its progenies and
-     * adds up all the children/grandchildren that have expanded view and have children.
-     * Ones without expanded view or without a child, their `Count` will remain at 0.
-     * (12.3.3 Table 152 and Exhibit H)
+     * Count for root Outlines is "total number of visible outline items at all levels of the outline."
+     * And value cannot be negative. "The entry shall be omitted if there are no open outline items."
+     * Count for other Outlines is the total number of its expanded/viewable descendents.
+     * So this traverses through all its progenies and
+     * adds up all the children/descendents that have expanded view and have children.
+     * Ones without a child, their `Count` will be 0.
+     * One with children but closed, their `Count` will be "negative and its absolute value is
+     * the number of descendants that would be visible if the outline item were opened".
+     * (12.3.3 Tables 152-153 and Annex H)
      */
-    let childrenCount = 0;
     if (this.children.length > 0) {
       const first = this.children[0];
       const last = this.children[this.children.length - 1];
       this.set(PDFName.First, first);
       this.set(PDFName.Last, last);
 
+      let childrenCount = 0; // Step 1. Initialize `Count` to zero.
+      childrenCount = this.children.length; //Step 2. Add to `Count` the number of immediate children.
       for (let idx = 0, len = this.children.length; idx < len; idx++) {
         const childRef = this.children[idx] as PDFRef;
         const child = this.context.lookup(childRef) as PDFOutlines;
@@ -157,16 +157,14 @@ class PDFOutlines extends PDFDict {
         if (idx < this.children.length - 1) {
           child.set(PDFName.Next, this.children[idx + 1]);
         }
-        childrenCount += child.endOutline();
+        const childCount = child.endOutline();
+        if (childCount > 0) childrenCount += childCount;
       }
+      const sign = this.options?.expanded ? 1 : -1;
+      this.set(PDFName.Count, PDFNumber.of((this.children.length + childrenCount) * sign));
+      return this.options?.expanded ? this.children.length + childrenCount : 0;
     }
-    if (this.options?.expanded) {
-      this.set(
-        PDFName.Count,
-        PDFNumber.of(this.children.length + childrenCount),
-      );
-    }
-    return this.options?.expanded ? this.children.length + childrenCount : 0;
+    return 0;
   }
 }
 
