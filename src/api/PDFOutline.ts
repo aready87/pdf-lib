@@ -66,7 +66,6 @@ export default class PDFOutline {
   /** The document to which this outline belongs. */
   readonly doc: PDFDocument;
 
-
   private constructor(outlineNode: PDFOutlines, ref: PDFRef, doc: PDFDocument) {
     assertIs(outlineNode, 'outlineNode', [[PDFOutlines, 'PDFOutlines']]);
     assertIs(ref, 'ref', [[PDFRef, 'PDFRef']]);
@@ -174,6 +173,4 @@ export default class PDFOutline {
 
     return outline;
   }
-
-
 }

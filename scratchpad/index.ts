@@ -14,6 +14,7 @@ import { PDFDocument } from 'src/index';
   pdfDoc.addPage();
   pdfDoc.addPage();
   
+  /* Declaration required for testing removing below */
   // const first = 
   pdfDoc.addOutline('First Outline', { expanded: true, linkToPage: 0 });
   const outline = pdfDoc.addOutline('Second Outline (page2)', {
@@ -24,22 +25,29 @@ import { PDFDocument } from 'src/index';
     expanded: true,
     linkToPage: 2,
   });
-  outline.addOutline('Child of Second (page5)', {
+  suboutline.addOutline('Grandchild of Second (page4)', { expanded: true, linkToPage: 3 });
+  outline.addOutline('Another Child of Second (page5)', {
     expanded: true,
     linkToPage: 4,
   });
-  suboutline.addOutline('Grandchild of Second (page4)', { expanded: true, linkToPage: 3 });
-
   pdfDoc.addOutline('Third Outline (Page6)', { expanded: true, linkToPage: 5 });
   pdfDoc.addOutline('Fourth Outline (Page7)', { expanded: true, linkToPage: 6 });
 
-  suboutline.setTitle('Changed title');
+  /* Testing editing: */
+  // suboutline.setTitle('Changed title');
   // outline.linkToPage(7);
   // suboutline.setExpanded(false);
 
+  /* Testing removing: */
   // suboutline.remove();
   // outline.remove();
   // first.remove();
+
+  /**
+   * Testing removing a page that an outline is linked to.
+   * Outline will remain but link will not work as expected since 
+   * Ref is pointed to a non-existent PDFObject.
+   */
   // pdfDoc.removePage(1);
 
   const page = pdfDoc.addPage();

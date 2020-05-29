@@ -97,10 +97,6 @@ class PDFOutlines extends PDFDict {
     this.set(PDFName.Dest, this.context.obj([dest, PDFName.Fit]));
   }
 
-  pushOutlineItem(outlineRef: PDFRef): void {
-    this.children.push(outlineRef);
-  }
-
   /**
    * Inserts the given ref of an outline node as a child of this PDFOutlines node at the
    * specified index (zero-based). The `Count` will be recalculated before
